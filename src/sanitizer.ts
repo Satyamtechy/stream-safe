@@ -1,19 +1,21 @@
-import { IncrementalTokenizer } from './tokenizer';
-import { SecurityFilter } from './filter';
-import type { SanitizerOptions, StreamSanitizer } from './types';
+import { SecurityFilter } from "./filter";
+import { IncrementalTokenizer } from "./tokenizer";
+import type { SanitizerOptions, StreamSanitizer } from "./types";
 
 const DEFAULTS: Required<SanitizerOptions> = {
   allowedTags: [],
   allowedAttributes: {},
-  allowedSchemes: ['http', 'https', 'mailto'],
+  allowedSchemes: ["http", "https", "mailto"],
   stripDisallowed: true,
   maxDepth: 50,
   maxAttributeLength: 2048,
-  onSafe: undefined as any,
-  onDanger: undefined as any,
+  onSafe: undefined as unknown as undefined,
+  onDanger: undefined as unknown as undefined,
 };
 
-export function createStreamSanitizer(options: SanitizerOptions = {}): StreamSanitizer {
+export function createStreamSanitizer(
+  options: SanitizerOptions = {},
+): StreamSanitizer {
   const opts = { ...DEFAULTS, ...options };
   const tokenizer = new IncrementalTokenizer();
   const filter = new SecurityFilter(opts);
@@ -23,23 +25,32 @@ export function createStreamSanitizer(options: SanitizerOptions = {}): StreamSan
   return {
     write(chunk: string): string {
       const tokens = tokenizer.write(chunk);
-      let output = '';
+      let output = "";
       for (const token of tokens) {
         switch (token.type) {
-          case 'text':
+          case "text":
             output += token.value;
             break;
-          case 'openTag':
+          case "openTag":
             if (filter.isDangerousTag(token.tagName)) {
               // dangerous content is already eaten by tokenizer
-              opts.onDanger?.(token.tagName, 'dangerous tag');
+              opts.onDanger?.(token.tagName, "dangerous tag");
             } else if (filter.isTagAllowed(token.tagName)) {
               if (depth >= opts.maxDepth) {
-                opts.onDanger?.(token.tagName, 'max depth exceeded');
+                opts.onDanger?.(token.tagName, "max depth exceeded");
                 break;
               }
-              const attrs = filter.filterAttributes(token.tagName, token.attributes);
-              const attrStr = attrs.map(a => a.value ? ` ${a.name}="${escapeAttr(a.value)}"` : ` ${a.name}`).join('');
+              const attrs = filter.filterAttributes(
+                token.tagName,
+                token.attributes,
+              );
+              const attrStr = attrs
+                .map((a) =>
+                  a.value
+                    ? ` ${a.name}="${escapeAttr(a.value)}"`
+                    : ` ${a.name}`,
+                )
+                .join("");
               if (token.selfClosing) {
                 output += `<${token.tagName}${attrStr} />`;
               } else {
@@ -52,16 +63,16 @@ export function createStreamSanitizer(options: SanitizerOptions = {}): StreamSan
               if (!opts.stripDisallowed) {
                 output += escapeHtml(`<${token.tagName}>`);
               }
-              opts.onDanger?.(token.tagName, 'tag not allowed');
+              opts.onDanger?.(token.tagName, "tag not allowed");
             }
             break;
-          case 'closeTag':
+          case "closeTag":
             if (filter.isTagAllowed(token.tagName)) {
               const idx = tagStack.lastIndexOf(token.tagName);
               if (idx !== -1) {
                 // Close any tags between current and the match
                 while (tagStack.length > idx) {
-                  const tag = tagStack.pop()!;
+                  const tag = tagStack.pop() as string;
                   output += `</${tag}>`;
                   depth--;
                 }
@@ -70,10 +81,10 @@ export function createStreamSanitizer(options: SanitizerOptions = {}): StreamSan
               output += escapeHtml(`</${token.tagName}>`);
             }
             break;
-          case 'dangerousContent':
-            opts.onDanger?.(token.tagName, 'dangerous content stripped');
+          case "dangerousContent":
+            opts.onDanger?.(token.tagName, "dangerous content stripped");
             break;
-          case 'comment':
+          case "comment":
             // Strip comments by default
             break;
         }
@@ -82,25 +93,34 @@ export function createStreamSanitizer(options: SanitizerOptions = {}): StreamSan
     },
     flush(): string {
       const tokens = tokenizer.flush();
-      let output = '';
+      let output = "";
       // Process any remaining tokens from flush
       for (const token of tokens) {
-        if (token.type === 'text') output += token.value;
+        if (token.type === "text") output += token.value;
       }
       // Close any unclosed tags
       while (tagStack.length > 0) {
-        output += `</${tagStack.pop()!}>`;
+        output += `</${tagStack.pop() as string}>`;
         depth--;
       }
       return output;
-    }
+    },
   };
 }
 
 function escapeAttr(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }

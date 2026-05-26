@@ -1,29 +1,29 @@
-import type { Token, Attribute } from './types';
+import type { Attribute, Token } from "./types";
 
-const enum State {
-  TEXT,
-  TAG_OPEN,
-  TAG_NAME,
-  TAG_CLOSE,
-  IN_ATTRIBUTE,
-  ATTR_VALUE,
-  IN_COMMENT,
-  IN_DANGEROUS,
+enum State {
+  TEXT = 0,
+  TAG_OPEN = 1,
+  TAG_NAME = 2,
+  TAG_CLOSE = 3,
+  IN_ATTRIBUTE = 4,
+  ATTR_VALUE = 5,
+  IN_COMMENT = 6,
+  IN_DANGEROUS = 7,
 }
 
-const DANGEROUS_TAGS = new Set(['script', 'style', 'xmp', 'plaintext']);
+const DANGEROUS_TAGS = new Set(["script", "style", "xmp", "plaintext"]);
 
 export class IncrementalTokenizer {
   private state: State = State.TEXT;
-  private buffer = '';
-  private tagName = '';
+  private buffer = "";
+  private tagName = "";
   private attributes: Attribute[] = [];
-  private attrName = '';
-  private attrValue = '';
-  private quoteChar = '';
+  private attrName = "";
+  private attrValue = "";
+  private quoteChar = "";
   private selfClosing = false;
-  private dangerousTag = '';
-  private commentBuffer = '';
+  private dangerousTag = "";
+  private commentBuffer = "";
 
   write(chunk: string): Token[] {
     const tokens: Token[] = [];
@@ -31,13 +31,13 @@ export class IncrementalTokenizer {
       const ch = chunk[i];
       switch (this.state) {
         case State.TEXT:
-          if (ch === '<') {
+          if (ch === "<") {
             if (this.buffer) {
-              tokens.push({ type: 'text', value: this.buffer });
-              this.buffer = '';
+              tokens.push({ type: "text", value: this.buffer });
+              this.buffer = "";
             }
             this.state = State.TAG_OPEN;
-            this.tagName = '';
+            this.tagName = "";
             this.attributes = [];
             this.selfClosing = false;
           } else {
@@ -46,23 +46,23 @@ export class IncrementalTokenizer {
           break;
 
         case State.TAG_OPEN:
-          if (ch === '/') {
+          if (ch === "/") {
             this.state = State.TAG_CLOSE;
-            this.tagName = '';
-          } else if (ch === '!') {
+            this.tagName = "";
+          } else if (ch === "!") {
             // Could be comment, check next chars
-            if (chunk[i + 1] === '-' && chunk[i + 2] === '-') {
+            if (chunk[i + 1] === "-" && chunk[i + 2] === "-") {
               this.state = State.IN_COMMENT;
-              this.commentBuffer = '';
+              this.commentBuffer = "";
               i += 2; // skip --
             } else {
               // Treat as text (doctype etc)
-              this.buffer = '<!' + (chunk[i + 1] || '');
+              this.buffer = `<!${chunk[i + 1] || ""}`;
               this.state = State.TEXT;
             }
-          } else if (ch === '>' || ch === ' ') {
+          } else if (ch === ">" || ch === " ") {
             // Malformed `< >` or `<>`, treat as text
-            this.buffer = '<' + ch;
+            this.buffer = `<${ch}`;
             this.state = State.TEXT;
           } else {
             this.tagName = ch;
@@ -71,20 +71,20 @@ export class IncrementalTokenizer {
           break;
 
         case State.TAG_NAME:
-          if (ch === '>') {
+          if (ch === ">") {
             this.emitOpenTag(tokens);
             if (this.state !== State.IN_DANGEROUS) this.state = State.TEXT;
-          } else if (ch === '/' && this.peek(chunk, i + 1) === '>') {
+          } else if (ch === "/" && this.peek(chunk, i + 1) === ">") {
             this.selfClosing = true;
             // Don't advance; next iteration will see '>' but we handle it now
-          } else if (ch === '>' && this.selfClosing) {
+          } else if (ch === ">" && this.selfClosing) {
             this.emitOpenTag(tokens);
             if (this.state !== State.IN_DANGEROUS) this.state = State.TEXT;
-          } else if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
+          } else if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
             this.state = State.IN_ATTRIBUTE;
-            this.attrName = '';
-            this.attrValue = '';
-          } else if (ch === '/') {
+            this.attrName = "";
+            this.attrValue = "";
+          } else if (ch === "/") {
             this.selfClosing = true;
           } else {
             this.tagName += ch;
@@ -92,33 +92,36 @@ export class IncrementalTokenizer {
           break;
 
         case State.TAG_CLOSE:
-          if (ch === '>') {
-            tokens.push({ type: 'closeTag', tagName: this.tagName.toLowerCase() });
+          if (ch === ">") {
+            tokens.push({
+              type: "closeTag",
+              tagName: this.tagName.toLowerCase(),
+            });
             this.state = State.TEXT;
-          } else if (ch !== ' ' && ch !== '\t' && ch !== '\n' && ch !== '\r') {
+          } else if (ch !== " " && ch !== "\t" && ch !== "\n" && ch !== "\r") {
             this.tagName += ch;
           }
           break;
 
         case State.IN_ATTRIBUTE:
-          if (ch === '>') {
+          if (ch === ">") {
             this.pushAttr();
             this.emitOpenTag(tokens);
             if (this.state !== State.IN_DANGEROUS) this.state = State.TEXT;
-          } else if (ch === '/') {
+          } else if (ch === "/") {
             this.selfClosing = true;
-          } else if (ch === '=') {
+          } else if (ch === "=") {
             // Move to reading value
             this.state = State.ATTR_VALUE;
-            this.attrValue = '';
-            this.quoteChar = '';
-          } else if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
+            this.attrValue = "";
+            this.quoteChar = "";
+          } else if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
             if (this.attrName) {
               // Could be a valueless attr or space before =
               // Peek ahead to see if next non-space is =
               const rest = chunk.slice(i + 1);
               const nextNonSpace = rest.match(/^\s*(.)/);
-              if (nextNonSpace && nextNonSpace[1] === '=') {
+              if (nextNonSpace && nextNonSpace[1] === "=") {
                 // Space before =, keep accumulating
               } else {
                 // Valueless attribute
@@ -135,7 +138,7 @@ export class IncrementalTokenizer {
             // First char of value
             if (ch === '"' || ch === "'") {
               this.quoteChar = ch;
-            } else if (ch === '>' ) {
+            } else if (ch === ">") {
               // Empty value attr like `attr=>`
               this.pushAttr();
               this.emitOpenTag(tokens);
@@ -148,23 +151,23 @@ export class IncrementalTokenizer {
             if (ch === this.quoteChar) {
               this.pushAttr();
               this.state = State.IN_ATTRIBUTE;
-              this.attrName = '';
+              this.attrName = "";
             } else {
               this.attrValue += ch;
             }
           } else {
             // Unquoted value - ends on space or >
-            if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
+            if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
               this.pushAttr();
               this.state = State.IN_ATTRIBUTE;
-              this.attrName = '';
-            } else if (ch === '>') {
+              this.attrName = "";
+            } else if (ch === ">") {
               this.pushAttr();
               this.emitOpenTag(tokens);
               if (this.state !== State.IN_DANGEROUS) this.state = State.TEXT;
-            } else if (ch === '/') {
+            } else if (ch === "/") {
               const next = this.peek(chunk, i + 1);
-              if (next === '>') {
+              if (next === ">") {
                 this.pushAttr();
                 this.selfClosing = true;
               } else {
@@ -178,31 +181,39 @@ export class IncrementalTokenizer {
 
         case State.IN_COMMENT:
           this.commentBuffer += ch;
-          if (this.commentBuffer.endsWith('-->')) {
-            tokens.push({ type: 'comment', value: this.commentBuffer.slice(0, -3) });
-            this.commentBuffer = '';
+          if (this.commentBuffer.endsWith("-->")) {
+            tokens.push({
+              type: "comment",
+              value: this.commentBuffer.slice(0, -3),
+            });
+            this.commentBuffer = "";
             this.state = State.TEXT;
           }
           break;
 
-        case State.IN_DANGEROUS:
+        case State.IN_DANGEROUS: {
           this.buffer += ch;
           const closeTag = `</${this.dangerousTag}>`;
           if (this.buffer.toLowerCase().endsWith(closeTag)) {
             const content = this.buffer.slice(0, -closeTag.length);
-            tokens.push({ type: 'dangerousContent', tagName: this.dangerousTag, value: content });
-            this.buffer = '';
-            this.dangerousTag = '';
+            tokens.push({
+              type: "dangerousContent",
+              tagName: this.dangerousTag,
+              value: content,
+            });
+            this.buffer = "";
+            this.dangerousTag = "";
             this.state = State.TEXT;
           }
           break;
+        }
       }
     }
 
     // Emit any accumulated text
     if (this.state === State.TEXT && this.buffer) {
-      tokens.push({ type: 'text', value: this.buffer });
-      this.buffer = '';
+      tokens.push({ type: "text", value: this.buffer });
+      this.buffer = "";
     }
 
     return tokens;
@@ -214,26 +225,30 @@ export class IncrementalTokenizer {
     switch (this.state) {
       case State.TEXT:
         if (this.buffer) {
-          tokens.push({ type: 'text', value: this.buffer });
+          tokens.push({ type: "text", value: this.buffer });
         }
         break;
       case State.TAG_OPEN:
-        tokens.push({ type: 'text', value: '<' });
+        tokens.push({ type: "text", value: "<" });
         break;
       case State.TAG_NAME:
       case State.IN_ATTRIBUTE:
       case State.ATTR_VALUE:
         // Incomplete tag, emit as text
-        tokens.push({ type: 'text', value: this.reconstructTag() });
+        tokens.push({ type: "text", value: this.reconstructTag() });
         break;
       case State.TAG_CLOSE:
-        tokens.push({ type: 'text', value: '</' + this.tagName });
+        tokens.push({ type: "text", value: `</${this.tagName}` });
         break;
       case State.IN_COMMENT:
-        tokens.push({ type: 'comment', value: this.commentBuffer });
+        tokens.push({ type: "comment", value: this.commentBuffer });
         break;
       case State.IN_DANGEROUS:
-        tokens.push({ type: 'dangerousContent', tagName: this.dangerousTag, value: this.buffer });
+        tokens.push({
+          type: "dangerousContent",
+          tagName: this.dangerousTag,
+          value: this.buffer,
+        });
         break;
     }
 
@@ -244,38 +259,51 @@ export class IncrementalTokenizer {
   private emitOpenTag(tokens: Token[]): void {
     const name = this.tagName.toLowerCase();
     if (DANGEROUS_TAGS.has(name) && !this.selfClosing) {
-      tokens.push({ type: 'openTag', tagName: name, attributes: this.attributes, selfClosing: false });
+      tokens.push({
+        type: "openTag",
+        tagName: name,
+        attributes: this.attributes,
+        selfClosing: false,
+      });
       this.dangerousTag = name;
-      this.buffer = '';
+      this.buffer = "";
       this.state = State.IN_DANGEROUS;
     } else {
-      tokens.push({ type: 'openTag', tagName: name, attributes: this.attributes, selfClosing: this.selfClosing });
+      tokens.push({
+        type: "openTag",
+        tagName: name,
+        attributes: this.attributes,
+        selfClosing: this.selfClosing,
+      });
     }
     this.attributes = [];
-    this.tagName = '';
+    this.tagName = "";
     this.selfClosing = false;
   }
 
   private pushAttr(): void {
     if (this.attrName) {
-      this.attributes.push({ name: this.attrName.toLowerCase(), value: this.attrValue });
-      this.attrName = '';
-      this.attrValue = '';
+      this.attributes.push({
+        name: this.attrName.toLowerCase(),
+        value: this.attrValue,
+      });
+      this.attrName = "";
+      this.attrValue = "";
     }
   }
 
   private peek(chunk: string, index: number): string {
-    return index < chunk.length ? chunk[index] : '';
+    return index < chunk.length ? chunk[index] : "";
   }
 
   private reconstructTag(): string {
-    let tag = '<' + this.tagName;
+    let tag = `<${this.tagName}`;
     for (const attr of this.attributes) {
-      tag += ' ' + attr.name;
+      tag += ` ${attr.name}`;
       if (attr.value) tag += `="${attr.value}"`;
     }
     if (this.attrName) {
-      tag += ' ' + this.attrName;
+      tag += ` ${this.attrName}`;
       if (this.attrValue) tag += `="${this.attrValue}"`;
     }
     return tag;
@@ -283,14 +311,14 @@ export class IncrementalTokenizer {
 
   private reset(): void {
     this.state = State.TEXT;
-    this.buffer = '';
-    this.tagName = '';
+    this.buffer = "";
+    this.tagName = "";
     this.attributes = [];
-    this.attrName = '';
-    this.attrValue = '';
-    this.quoteChar = '';
+    this.attrName = "";
+    this.attrValue = "";
+    this.quoteChar = "";
     this.selfClosing = false;
-    this.dangerousTag = '';
-    this.commentBuffer = '';
+    this.dangerousTag = "";
+    this.commentBuffer = "";
   }
 }

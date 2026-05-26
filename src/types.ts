@@ -17,11 +17,16 @@ export interface StreamSanitizer {
 export interface Preset extends SanitizerOptions {}
 
 export type Token =
-  | { type: 'text'; value: string }
-  | { type: 'openTag'; tagName: string; attributes: Attribute[]; selfClosing: boolean }
-  | { type: 'closeTag'; tagName: string }
-  | { type: 'comment'; value: string }
-  | { type: 'dangerousContent'; tagName: string; value: string };
+  | { type: "text"; value: string }
+  | {
+      type: "openTag";
+      tagName: string;
+      attributes: Attribute[];
+      selfClosing: boolean;
+    }
+  | { type: "closeTag"; tagName: string }
+  | { type: "comment"; value: string }
+  | { type: "dangerousContent"; tagName: string; value: string };
 
 export interface Attribute {
   name: string;
