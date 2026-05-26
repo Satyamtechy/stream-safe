@@ -1,0 +1,12 @@
+src/
+tests/
+benchmarks/
+.github/
+.changeset/
+biome.json
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+PLAN.md
+CONTRIBUTING.md
+SECURITY.md
