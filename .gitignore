@@ -3,3 +3,4 @@ dist/
 *.tgz
 .vite/
 .npmrc
+package-lock.json
