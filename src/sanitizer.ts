@@ -9,8 +9,8 @@ const DEFAULTS: Required<SanitizerOptions> = {
   stripDisallowed: true,
   maxDepth: 50,
   maxAttributeLength: 2048,
-  onSafe: undefined as unknown as undefined,
-  onDanger: undefined as unknown as undefined,
+  onSafe: undefined as unknown as (html: string) => void,
+  onDanger: undefined as unknown as (tag: string, reason: string) => void,
 };
 
 export function createStreamSanitizer(
