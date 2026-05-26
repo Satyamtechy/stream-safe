@@ -27,6 +27,7 @@
     "test": "vitest",
     "lint": "biome check src tests",
     "format": "biome format --write src tests",
+    "bench": "vitest bench --run",
     "prepublishOnly": "npm run build"
   },
   "engines": {

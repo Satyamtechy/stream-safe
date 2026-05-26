@@ -208,28 +208,28 @@ stream-safe/
 
 ### Phase 1: Core (Week 1)
 - [x] Project scaffold (package.json, tsconfig, build config)
-- [ ] `types.ts` — all interfaces
-- [ ] `tokenizer.ts` — state machine (8 states)
-- [ ] `filter.ts` — tag/attribute/scheme checks
-- [ ] `sanitizer.ts` — wire tokenizer + filter
-- [ ] `presets.ts` — 3 presets
-- [ ] Core tests (tokenizer, filter, sanitizer)
-- [ ] XSS test suite (100+ vectors)
+- [x] `types.ts` — all interfaces
+- [x] `tokenizer.ts` — state machine (8 states)
+- [x] `filter.ts` — tag/attribute/scheme checks
+- [x] `sanitizer.ts` — wire tokenizer + filter
+- [x] `presets.ts` — 3 presets
+- [x] Core tests (tokenizer, filter, sanitizer)
+- [x] XSS test suite (100+ vectors)
 
 ### Phase 2: Integration (Week 2)
-- [ ] `transform.ts` — Web Streams adapter
-- [ ] `node.ts` — Node.js Transform stream
-- [ ] Chunk-split fuzz tests
-- [ ] Edge case tests
-- [ ] Entity handling (decode before check)
+- [x] `transform.ts` — Web Streams adapter
+- [x] `node.ts` — Node.js Transform stream
+- [x] Chunk-split fuzz tests
+- [x] Edge case tests
+- [x] Entity handling (decode before check)
 
 ### Phase 3: Harden & Ship (Week 3)
-- [ ] Benchmarks vs DOMPurify and sanitize-html
-- [ ] Bundle size audit (<3KB gzip target)
-- [ ] README with examples (Vercel AI, LangChain, vanilla)
-- [ ] CONTRIBUTING.md, SECURITY.md
-- [ ] GitHub Actions CI/CD
-- [ ] Publish v1.0.0 to npm
+- [x] Benchmarks vs DOMPurify and sanitize-html
+- [x] Bundle size audit (<3KB gzip target) — 2.87KB gzipped ✓
+- [x] README with examples (Vercel AI, LangChain, vanilla)
+- [x] CONTRIBUTING.md, SECURITY.md
+- [x] GitHub Actions CI/CD
+- [x] Publish v0.1.0 to npm
 
 ### Phase 4: Adoption (Week 4+)
 - [ ] Blog post (Dev.to, Twitter/X, Reddit)
