@@ -5,6 +5,9 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -18,7 +21,7 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
-      - run: rm -f package-lock.json && npm install
+      - run: npm install
       - run: npm run build
       - run: npm test -- --run
       - name: Create Release PR or Publish
