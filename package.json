@@ -45,7 +45,15 @@
     "stream",
     "dompurify-alternative"
   ],
-  "author": "Rahul Dalvi",
+  "author": "Satyamtechy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Satyamtechy/stream-safe.git"
+  },
+  "homepage": "https://github.com/Satyamtechy/stream-safe#readme",
+  "bugs": {
+    "url": "https://github.com/Satyamtechy/stream-safe/issues"
+  },
   "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
