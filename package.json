@@ -1,6 +1,6 @@
 {
   "name": "stream-safe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Streaming HTML sanitizer for LLM output — zero dependencies",
   "exports": {
