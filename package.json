@@ -1,6 +1,6 @@
 {
   "name": "stream-safe",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "description": "Streaming HTML sanitizer for LLM output — zero dependencies",
   "exports": {
@@ -8,6 +8,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
     },
     "./node": {
       "types": "./dist/node.d.ts",
@@ -55,7 +60,16 @@
     "url": "https://github.com/Satyamtechy/stream-safe/issues"
   },
   "license": "MIT",
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@types/react": "^18.0.0",
     "@biomejs/biome": "1.9.4",
     "@changesets/cli": "2.29.4",
     "@types/node": "^20.0.0",
