@@ -57,7 +57,7 @@ export function SafeStream({
   if (content !== prevContent.current) {
     if (content.length < prevContent.current.length) {
       // Content shrunk — new message, re-sanitize from scratch
-      const fresh = createStreamSanitizer(resolved);
+      const fresh = createStreamSanitizer(resolveOptions(preset, options));
       sanitizedRef.current = fresh.write(content) + fresh.flush();
     } else {
       // Content grew — sanitize only the new delta
