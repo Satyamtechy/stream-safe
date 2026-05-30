@@ -84,6 +84,38 @@ llmStream.pipe(createNodeTransform(presets.llmChat)).pipe(res);
 
 ---
 
+## React
+
+```tsx
+import { SafeStream } from 'stream-safe/react';
+
+function ChatMessage({ content }: { content: string }) {
+  return <SafeStream content={content} preset="llmChat" className="prose" />;
+}
+```
+
+### Hook for manual control
+
+```tsx
+import { useSafeStream } from 'stream-safe/react';
+
+function StreamingChat() {
+  const { sanitize, flush } = useSafeStream({ preset: 'llmChat' });
+  const [html, setHtml] = useState('');
+
+  useEffect(() => {
+    // On each chunk from your LLM stream:
+    setHtml(prev => prev + sanitize(newChunk));
+    // On stream end:
+    setHtml(prev => prev + flush());
+  }, [chunks]);
+
+  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+}
+```
+
+---
+
 ## Presets
 
 | Preset | Use Case |

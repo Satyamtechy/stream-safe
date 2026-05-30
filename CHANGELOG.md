@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 (2026-05-30)
+
+### Features
+- React integration: `<SafeStream>` component and `useSafeStream()` hook
+- Import from `'stream-safe/react'` — tree-shakeable, React 18+ peer dep
+- Incremental delta processing (only sanitizes new characters per render)
+
 ## 1.0.0 (2026-05-27)
 
 Initial release.
